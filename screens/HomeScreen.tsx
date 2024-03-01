@@ -74,12 +74,17 @@ const HomeScreen: React.FC<HomeStackProps> = ({
           schema: [ProductSchema],
         });
         const res = realm
-          .objects('Product')
-          .filtered('productCode BEGINSWITH[c] $0', q) as unknown as Product[];
+          .objects<Product>('Product')
+          .filtered('productCode BEGINSWITH[c] $0', q)// as unknown as Product[];
 
         if (res && res.length) {
           const p: Product[] = [];
-          res.forEach(item => p.push({...item}));
+          res.forEach(item => p.push({
+            _id: item._id.toString(),
+            productCode: item.productCode,
+            updatedAt: item.updatedAt,
+            stock: item.stock,
+          }));
           setProducts(p);
         }
         console.log('res', res);
@@ -114,8 +119,8 @@ const HomeScreen: React.FC<HomeStackProps> = ({
   const renderListItem = ({item}: {item: Product}) => (
     <TouchableHighlight
       onPress={() => {
-        console.log('navigate', item.productCode);
-        navigation.navigate('Purchase Form', {productCode: item.productCode});
+        console.log('navigate', item.productCode, typeof item._id);
+        navigation.navigate('Product Detail', {_id: item._id});
       }}>
       <View style={styles.row}>
         <View>

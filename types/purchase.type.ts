@@ -1,8 +1,12 @@
-import { Product } from "./product.type";
+export interface PurchaseItem {
+  productCode: string;
+  quantity: number;
+  price: number;
+}
 
 export interface Purchase {
   _id: string;
-  items: Product[];
+  items: PurchaseItem[];
   notes: string;
   purchaser: string;
   createdAt: Date;

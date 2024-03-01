@@ -5,29 +5,21 @@
  * @format
  */
 import {NavigationContainer} from '@react-navigation/native';
-import {
-  createNativeStackNavigator,
-  NativeStackScreenProps,
-} from '@react-navigation/native-stack';
+import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import React from 'react';
 import {StyleSheet, Text, useColorScheme, View} from 'react-native';
 import Toast from 'react-native-toast-message';
 import {Colors} from 'react-native/Libraries/NewAppScreen';
 
 import HomeScreen from './screens/HomeScreen';
+import ProductDetailScreen from './screens/ProductDetailScreen';
 import PurchaseFormScreen from './screens/PurchaseFormScreen';
+import {RootStackParamList} from './types/stack.type';
 
 import type {PropsWithChildren} from 'react';
 type SectionProps = PropsWithChildren<{
   title: string;
 }>;
-
-type RootStackParamList = {
-  Home: undefined;
-  'Purchase Form': {productCode: string};
-  Feed: {sort: 'latest' | 'top'} | undefined;
-};
-type Props = NativeStackScreenProps<RootStackParamList, 'Home'>;
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -67,6 +59,7 @@ function App(): React.JSX.Element {
           options={{title: 'StockRN'}}
         />
         <Stack.Screen name="Purchase Form" component={PurchaseFormScreen} />
+        <Stack.Screen name="Product Detail" component={ProductDetailScreen} />
       </Stack.Navigator>
       <Toast />
     </NavigationContainer>
