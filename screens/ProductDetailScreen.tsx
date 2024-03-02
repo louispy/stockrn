@@ -1,24 +1,18 @@
-import {useNavigation} from '@react-navigation/native';
-import {useEffect, useState} from 'react';
-import {
-  FlatList,
-  StyleSheet,
-  Text,
-  TouchableHighlight,
-  View,
-  useColorScheme,
-} from 'react-native';
+import {useFocusEffect, useIsFocused} from '@react-navigation/native';
+import {Button} from '@rneui/base';
+import moment from 'moment-timezone';
+import React, {useEffect, useState} from 'react';
+import {FlatList, StyleSheet, Text, useColorScheme, View} from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import Toast from 'react-native-toast-message';
 import {Colors} from 'react-native/Libraries/NewAppScreen';
 import Realm from 'realm';
 
 import ProductSchema from '../schemas/product.schema';
-import {Product} from '../types/product.type';
-import {ProductDetailStackProps} from '../types/stack.type';
 import PurchaseSchema, {PurchaseItemSchema} from '../schemas/purchase.schema';
+import {Product} from '../types/product.type';
 import {Purchase} from '../types/purchase.type';
-import moment from 'moment-timezone';
+import {ProductDetailStackProps} from '../types/stack.type';
 
 const ProductDetailScreen: React.FC<ProductDetailStackProps> = (
   props: ProductDetailStackProps,
@@ -85,49 +79,54 @@ const ProductDetailScreen: React.FC<ProductDetailStackProps> = (
   });
 
   const [purchases, setPurchases] = useState<Purchase[]>([]);
+  const isFocused = useIsFocused();
+
+  const fetchProduct = async () => {
+    const id = new Realm.BSON.ObjectID(props.route.params._id);
+    let realm = null;
+    try {
+      realm = await Realm.open({
+        schema: [ProductSchema, PurchaseItemSchema, PurchaseSchema],
+      });
+      const productRes = realm.objectForPrimaryKey<Product>(
+        'Product',
+        id as unknown as string,
+      );
+      if (!productRes) {
+        Toast.show({text1: 'Product not found: ' + id});
+        return;
+      }
+      setProduct({
+        _id: productRes._id.toString(),
+        updatedAt: productRes.updatedAt,
+        stock: productRes.stock,
+        productCode: productRes.productCode,
+      });
+      const purchasesRes = realm
+        .objects<Purchase>('Purchase')
+        .filtered('ANY items.productCode = $0', productRes?.productCode)
+        .sorted('createdAt', true);
+      if (purchasesRes && purchasesRes.length) {
+        const p: Purchase[] = [];
+        purchasesRes.forEach(purchase =>
+          p.push({...purchase.toJSON()} as unknown as Purchase),
+        );
+        setPurchases(p);
+      }
+    } catch (error) {
+      console.error(error);
+    } finally {
+      if (realm !== null && !realm.isClosed) {
+        console.log('realm close');
+        realm.close();
+      }
+    }
+  };
 
   useEffect(() => {
-    (async () => {
-      const id = new Realm.BSON.ObjectID(props.route.params._id);
-      let realm = null;
-      try {
-        realm = await Realm.open({
-          schema: [ProductSchema, PurchaseItemSchema, PurchaseSchema],
-        });
-        const productRes = realm.objectForPrimaryKey<Product>(
-          'Product',
-          id as unknown as string,
-        );
-        if (!productRes) {
-          Toast.show({text1: 'Product not found: ' + id});
-          return;
-        }
-        setProduct({
-          _id: productRes._id.toString(),
-          updatedAt: productRes.updatedAt,
-          stock: productRes.stock,
-          productCode: productRes.productCode,
-        });
-        const purchasesRes = realm
-          .objects<Purchase>('Purchase')
-          .filtered('ANY items.productCode = $0', productRes?.productCode)
-          .sorted('createdAt', true);
-        if (purchasesRes && purchasesRes.length) {
-          const p: Purchase[] = [];
-          purchasesRes.forEach(purchase =>
-            p.push({...purchase.toJSON()} as unknown as Purchase),
-          );
-          setPurchases(p);
-        }
-      } catch (error) {
-        console.error(error);
-      } finally {
-        if (realm !== null && !realm.isClosed) {
-          realm.close();
-        }
-      }
-    })();
-  }, []);
+    fetchProduct();
+  }, [props, isFocused]);
+
 
   const renderListItem = ({item}: {item: Purchase}) => (
     <View style={styles.row}>
@@ -162,6 +161,24 @@ const ProductDetailScreen: React.FC<ProductDetailStackProps> = (
         renderItem={renderListItem}
         keyExtractor={(item: Purchase) => item._id}
         style={styles.purchases}
+      />
+      <Button
+        icon={{
+          name: 'plus-square',
+          type: 'font-awesome',
+          size: 20,
+          color: primaryColor,
+        }}
+        buttonStyle={styles.button}
+        titleStyle={styles.buttonTitle}
+        containerStyle={styles.buttonContainer}
+        type="clear"
+        title="Create Purchase"
+        onPress={() =>
+          props.navigation.navigate('Purchase Form', {
+            productCode: product.productCode,
+          })
+        }
       />
     </SafeAreaView>
   );

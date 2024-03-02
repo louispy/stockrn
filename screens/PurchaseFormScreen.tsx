@@ -1,4 +1,5 @@
 import 'react-native-get-random-values';
+import Realm from 'realm';
 
 import {useNavigation} from '@react-navigation/native';
 import {Button} from '@rneui/base';
@@ -13,13 +14,11 @@ import {
 } from 'react-native';
 import Toast from 'react-native-toast-message';
 import {Colors} from 'react-native/Libraries/NewAppScreen';
-import Realm from 'realm';
 import * as z from 'zod';
 
 import ProductSchema from '../schemas/product.schema';
 import PurchaseSchema, {PurchaseItemSchema} from '../schemas/purchase.schema';
 import {Product} from '../types/product.type';
-import {Purchase} from '../types/purchase.type';
 import {PurchaseFormStackProps} from '../types/stack.type';
 
 const PurchaseFormScreen: React.FC<PurchaseFormStackProps> = (
@@ -38,29 +37,12 @@ const PurchaseFormScreen: React.FC<PurchaseFormStackProps> = (
   const [productCodeDisabled, setProductCodeDisabled] = React.useState(false);
   const primaryColor = isDarkMode ? Colors.lighter : Colors.darker;
   const secondaryColor = isDarkMode ? Colors.darker : Colors.lighter;
-  const [purchases, setPurchases] = React.useState<Purchase[]>([]);
 
   useEffect(() => {
     (async () => {
       if (props.route.params.productCode) {
         setProductCode(props.route.params.productCode);
         setProductCodeDisabled(true);
-      }
-      let realm = null;
-      try {
-        realm = await Realm.open({
-          schema: [PurchaseItemSchema, PurchaseSchema],
-        });
-        let pchs = realm.objects('Purchase') as unknown as Purchase[];
-        if (pchs) {
-          setPurchases([...pchs]);
-        }
-      } catch (e) {
-        console.error(e);
-      } finally {
-        if (realm !== null && !realm.isClosed) {
-          realm.close();
-        }
       }
     })();
   }, []);
@@ -201,11 +183,10 @@ const PurchaseFormScreen: React.FC<PurchaseFormStackProps> = (
     <>
       <SafeAreaView style={styles.root}>
         <ScrollView>
-          <Text style={styles.label}>purchases {purchases.toString()}</Text>
           <Text style={styles.label}>Product Code</Text>
           <TextInput
             style={styles.input}
-            onChangeText={setProductCode}
+            onChangeText={text => setProductCode(text.toUpperCase())}
             placeholder="<ABC123>"
             autoCapitalize="characters"
             value={productCode}

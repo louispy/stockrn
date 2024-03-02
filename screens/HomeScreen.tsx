@@ -17,6 +17,7 @@ import Realm from 'realm';
 import ProductSchema from '../schemas/product.schema';
 import {Product} from '../types/product.type';
 import {HomeStackProps} from '../types/stack.type';
+import {useIsFocused} from '@react-navigation/native';
 
 const HomeScreen: React.FC<HomeStackProps> = ({
   navigation,
@@ -64,6 +65,9 @@ const HomeScreen: React.FC<HomeStackProps> = ({
 
   const [query, setQuery] = useState<string>('');
   const [products, setProducts] = useState<Product[]>([]);
+  // const isFocused = useIsFocused();
+
+  // useEffect(() => handleSearch(query), [isFocused]);
 
   const handleSearch = (q: string) => {
     if (q.length < 3) return;
@@ -75,16 +79,18 @@ const HomeScreen: React.FC<HomeStackProps> = ({
         });
         const res = realm
           .objects<Product>('Product')
-          .filtered('productCode BEGINSWITH[c] $0', q)// as unknown as Product[];
+          .filtered('productCode BEGINSWITH[c] $0', q);
 
         if (res && res.length) {
           const p: Product[] = [];
-          res.forEach(item => p.push({
-            _id: item._id.toString(),
-            productCode: item.productCode,
-            updatedAt: item.updatedAt,
-            stock: item.stock,
-          }));
+          res.forEach(item =>
+            p.push({
+              _id: item._id.toString(),
+              productCode: item.productCode,
+              updatedAt: item.updatedAt,
+              stock: item.stock,
+            }),
+          );
           setProducts(p);
         }
         console.log('res', res);
@@ -92,6 +98,7 @@ const HomeScreen: React.FC<HomeStackProps> = ({
         console.error(e);
       } finally {
         if (realm !== null && !realm.isClosed) {
+          console.log('realm close hhome');
           realm.close();
         }
       }
@@ -99,7 +106,6 @@ const HomeScreen: React.FC<HomeStackProps> = ({
   };
   const handleSearchChange = (text: string) => {
     setQuery(text);
-    // debouncedSearch(text);
   };
 
   const DEBOUNCE_TIMEOUT = 500;
