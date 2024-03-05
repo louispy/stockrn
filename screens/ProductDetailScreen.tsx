@@ -117,7 +117,6 @@ const ProductDetailScreen: React.FC<ProductDetailStackProps> = (
       console.error(error);
     } finally {
       if (realm !== null && !realm.isClosed) {
-        console.log('realm close');
         realm.close();
       }
     }

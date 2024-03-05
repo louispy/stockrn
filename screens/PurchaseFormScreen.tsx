@@ -1,21 +1,16 @@
 import 'react-native-get-random-values';
-import Realm from 'realm';
 
 import {useNavigation} from '@react-navigation/native';
 import {Button} from '@rneui/base';
+import _ from 'lodash';
 import React, {useEffect} from 'react';
-import {
-  SafeAreaView,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  useColorScheme,
-} from 'react-native';
+import {SafeAreaView, ScrollView, Text, TextInput} from 'react-native';
 import Toast from 'react-native-toast-message';
-import {Colors} from 'react-native/Libraries/NewAppScreen';
+import Realm from 'realm';
 import * as z from 'zod';
 
+import SubmitConfirmationModal from '../components/SubmitConfirmationModal';
+import {useStyles} from '../hooks/useStyles';
 import ProductSchema from '../schemas/product.schema';
 import PurchaseSchema, {PurchaseItemSchema} from '../schemas/purchase.schema';
 import {Product} from '../types/product.type';
@@ -24,7 +19,6 @@ import {PurchaseFormStackProps} from '../types/stack.type';
 const PurchaseFormScreen: React.FC<PurchaseFormStackProps> = (
   props: PurchaseFormStackProps,
 ): React.JSX.Element => {
-  const isDarkMode = useColorScheme() === 'dark';
   const navigation = useNavigation();
   const [productCode, setProductCode] = React.useState('');
   const [quantity, setQuantity] = React.useState('0');
@@ -35,8 +29,8 @@ const PurchaseFormScreen: React.FC<PurchaseFormStackProps> = (
   const [quantityWarning, setQuantityWarning] = React.useState('');
   const [priceWarning, setPriceWarning] = React.useState('');
   const [productCodeDisabled, setProductCodeDisabled] = React.useState(false);
-  const primaryColor = isDarkMode ? Colors.lighter : Colors.darker;
-  const secondaryColor = isDarkMode ? Colors.darker : Colors.lighter;
+  const [modalVisible, setModalVisible] = React.useState(false);
+  const {primaryColor, styles} = useStyles();
 
   useEffect(() => {
     (async () => {
@@ -46,51 +40,6 @@ const PurchaseFormScreen: React.FC<PurchaseFormStackProps> = (
       }
     })();
   }, []);
-
-  const styles = StyleSheet.create({
-    root: {
-      backgroundColor: secondaryColor,
-      padding: 10,
-      flex: 1,
-    },
-    label: {
-      color: primaryColor,
-      fontWeight: 'bold',
-      fontSize: 15,
-      marginLeft: 12,
-      marginTop: 12,
-    },
-    warning: {
-      color: '#f00',
-      fontSize: 15,
-      marginLeft: 12,
-    },
-    input: {
-      height: 40,
-      marginHorizontal: 12,
-      marginTop: 12,
-      borderWidth: 1,
-      borderColor: primaryColor,
-      padding: 10,
-      color: primaryColor,
-    },
-    inputMulti: {
-      height: 80,
-      margin: 12,
-      borderWidth: 1,
-      borderColor: primaryColor,
-      padding: 10,
-    },
-    button: {
-      backgroundColor: secondaryColor,
-      borderColor: primaryColor,
-      borderWidth: 1,
-      borderRadius: 10,
-      padding: 15,
-    },
-    buttonTitle: {color: primaryColor},
-    buttonContainer: {paddingVertical: 30},
-  });
 
   const purchaseSchema = z.object({
     productCode: z.string().min(1, 'Product code may not be empty'),
@@ -105,14 +54,31 @@ const PurchaseFormScreen: React.FC<PurchaseFormStackProps> = (
       }
     };
 
-  const handleSubmit = async () => {
-    const res = purchaseSchema.safeParse({
+  const getFormData = () => {
+    return {
       productCode,
       quantity,
       price,
       notes,
       purchaser,
-    });
+    };
+  };
+
+  
+
+  const getFormattedFormData = () => {
+    return {
+      productCode,
+      quantity,
+      'Price (IDR)': _.parseInt(price).toLocaleString('id-ID'),
+      notes,
+      purchaser,
+      'Sub Total (IDR)': (_.parseInt(price) * _.parseInt(quantity)).toLocaleString('id-ID'),
+    };
+  };
+
+  const validateForm = () => {
+    const res = purchaseSchema.safeParse(getFormData());
 
     if (!res.success) {
       const {error} = res;
@@ -126,8 +92,14 @@ const PurchaseFormScreen: React.FC<PurchaseFormStackProps> = (
       if (err.price) {
         setPriceWarning(err.price.join(';'));
       }
-      return;
+      return false;
     }
+    return true;
+  };
+
+  const handleConfirm = async () => {
+    const success = validateForm();
+    if (!success) return;
 
     let realm: Realm | null = null;
 
@@ -177,6 +149,12 @@ const PurchaseFormScreen: React.FC<PurchaseFormStackProps> = (
       }
       navigation.goBack();
     }
+  };
+
+  const handleSubmit = () => {
+    const success = validateForm();
+    if (!success) return;
+    setModalVisible(true);
   };
 
   return (
@@ -239,7 +217,7 @@ const PurchaseFormScreen: React.FC<PurchaseFormStackProps> = (
         </ScrollView>
         <Button
           icon={{
-            name: 'send',
+            name: 'shopping-cart',
             type: 'font-awesome',
             size: 20,
             color: primaryColor,
@@ -250,6 +228,12 @@ const PurchaseFormScreen: React.FC<PurchaseFormStackProps> = (
           type="clear"
           title="Purchase"
           onPress={handleSubmit}
+        />
+        <SubmitConfirmationModal
+          data={getFormattedFormData()}
+          onClose={() => setModalVisible(false)}
+          onSubmit={handleConfirm}
+          visible={modalVisible}
         />
       </SafeAreaView>
     </>
