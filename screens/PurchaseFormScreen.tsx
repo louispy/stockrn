@@ -15,6 +15,7 @@ import ProductSchema from '../schemas/product.schema';
 import PurchaseSchema, {PurchaseItemSchema} from '../schemas/purchase.schema';
 import {Product} from '../types/product.type';
 import {PurchaseFormStackProps} from '../types/stack.type';
+import { useRealm } from '@realm/react';
 
 const PurchaseFormScreen: React.FC<PurchaseFormStackProps> = (
   props: PurchaseFormStackProps,
@@ -31,6 +32,8 @@ const PurchaseFormScreen: React.FC<PurchaseFormStackProps> = (
   const [productCodeDisabled, setProductCodeDisabled] = React.useState(false);
   const [modalVisible, setModalVisible] = React.useState(false);
   const {primaryColor, styles} = useStyles();
+
+  const realm = useRealm();
 
   useEffect(() => {
     (async () => {
@@ -101,12 +104,9 @@ const PurchaseFormScreen: React.FC<PurchaseFormStackProps> = (
     const success = validateForm();
     if (!success) return;
 
-    let realm: Realm | null = null;
 
     try {
-      realm = await Realm.open({
-        schema: [ProductSchema, PurchaseItemSchema, PurchaseSchema],
-      });
+
       realm.write(() => {
         if (!realm) return;
         const now = new Date();
@@ -144,9 +144,9 @@ const PurchaseFormScreen: React.FC<PurchaseFormStackProps> = (
       console.error(err);
       Toast.show({text1: 'ERROR: ' + err});
     } finally {
-      if (realm !== null && !realm.isClosed) {
-        realm.close();
-      }
+      // if (realm !== null && !realm.isClosed) {
+      //   realm.close();
+      // }
       navigation.goBack();
     }
   };

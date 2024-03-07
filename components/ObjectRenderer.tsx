@@ -27,6 +27,11 @@ const renderObjectProperties = (
       fontWeight: 'bold',
       fontSize: 15,
     },
+    arrItem: {
+      borderWidth: 1,
+      borderColor: primaryColor,
+      paddingHorizontal: 5,
+    },
   });
 
   return Object.entries(obj).map(([key, value]) => {
@@ -35,7 +40,7 @@ const renderObjectProperties = (
         <View key={key}>
           <Text style={styles.label}>{_.startCase(key)}:</Text>
           {value.map((item, index) => (
-            <View key={`${key}-${index}`}>
+            <View key={`${key}-${index}`} style={styles.arrItem}>
               {typeof item === 'object' ? (
                 renderObjectProperties(item)
               ) : (
@@ -77,7 +82,9 @@ const renderObjectProperties = (
 const ObjectRenderer: React.FC<{data: Record<string, DataType>}> = ({data}) => {
   return (
     <ScrollView style={{marginHorizontal: 0}}>
-      {renderObjectProperties(data)}
+      <View onStartShouldSetResponder={() => true}>
+        {renderObjectProperties(data)}
+      </View>
     </ScrollView>
   );
 };

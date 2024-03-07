@@ -34,7 +34,7 @@ const SubmitConfirmationModal: React.FC<SubmitConfirmationModalProps> = (
       borderColor: primaryColor,
       borderRadius: 20,
       borderWidth: 2,
-      flex: 0.5,
+      flex: 0.7,
       justifyContent: 'space-between',
       flexDirection: 'column',
     },

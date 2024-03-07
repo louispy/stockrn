@@ -58,6 +58,17 @@ export const useStyles = () => {
       borderColor: primaryColor,
       padding: 10,
     },
+    picker: {
+      // alignItems: 'center',
+      height: 55,
+      marginHorizontal: 12,
+      marginTop: 12,
+      borderWidth: 1,
+      borderColor: primaryColor,
+      color: primaryColor,
+      width: 175,
+      fontSize: 16,
+    },
     button: {
       backgroundColor: secondaryColor,
       borderColor: primaryColor,

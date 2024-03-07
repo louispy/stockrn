@@ -13,6 +13,8 @@ import PurchaseSchema, {PurchaseItemSchema} from '../schemas/purchase.schema';
 import {Product} from '../types/product.type';
 import {Purchase} from '../types/purchase.type';
 import {ProductDetailStackProps} from '../types/stack.type';
+import {useRealm} from '@realm/react';
+import {Order} from '../types/order.type';
 
 const ProductDetailScreen: React.FC<ProductDetailStackProps> = (
   props: ProductDetailStackProps,
@@ -79,15 +81,13 @@ const ProductDetailScreen: React.FC<ProductDetailStackProps> = (
   });
 
   const [purchases, setPurchases] = useState<Purchase[]>([]);
+  const [orders, setOrders] = useState<Order[]>([]);
   const isFocused = useIsFocused();
+  const realm = useRealm();
 
-  const fetchProduct = async () => {
+  const fetchData = async () => {
     const id = new Realm.BSON.ObjectID(props.route.params._id);
-    let realm = null;
     try {
-      realm = await Realm.open({
-        schema: [ProductSchema, PurchaseItemSchema, PurchaseSchema],
-      });
       const productRes = realm.objectForPrimaryKey<Product>(
         'Product',
         id as unknown as string,
@@ -113,21 +113,27 @@ const ProductDetailScreen: React.FC<ProductDetailStackProps> = (
         );
         setPurchases(p);
       }
+      const ordersRes = realm
+        .objects<Purchase>('Order')
+        .filtered('ANY items.productCode = $0', productRes?.productCode)
+        .sorted('createdAt', true);
+      if (ordersRes && ordersRes.length) {
+        const o: Order[] = [];
+        ordersRes.forEach(order =>
+          o.push({...order.toJSON()} as unknown as Order),
+        );
+        setOrders(o);
+      }
     } catch (error) {
       console.error(error);
-    } finally {
-      if (realm !== null && !realm.isClosed) {
-        realm.close();
-      }
     }
   };
 
   useEffect(() => {
-    fetchProduct();
+    fetchData();
   }, [props, isFocused]);
 
-
-  const renderListItem = ({item}: {item: Purchase}) => (
+  const renderPurchaseListItem = ({item}: {item: Purchase}) => (
     <View style={styles.row}>
       <View>
         <Text style={styles.label}>
@@ -150,17 +156,57 @@ const ProductDetailScreen: React.FC<ProductDetailStackProps> = (
       </View>
     </View>
   );
+  const renderOrderListItem = ({item}: {item: Order}) => (
+    <View style={styles.row}>
+      <View>
+        <Text style={styles.label}>
+          {moment.utc(item.createdAt).local().format('YYYY-MM-DD HH:mm')}
+        </Text>
+        <Text style={styles.label}>
+          {item.items
+            .map(
+              item =>
+                `${item.productCode}: IDR ${item.price.toLocaleString(
+                  'id-ID',
+                )} (x${item.quantity})`,
+            )
+            .join('\n')}
+        </Text>
+      </View>
+      <View>
+        <Text>{item.admin}</Text>
+        <Text>{item.buyer}</Text>
+        <Text>{item.notes}</Text>
+      </View>
+    </View>
+  );
+
   return (
     <SafeAreaView style={styles.root}>
       <Text style={styles.title}>{product.productCode}</Text>
       <Text style={styles.label}>Stock: {product.stock}</Text>
-      <Text style={styles.subtitle}>Purchase History</Text>
-      <FlatList
-        data={purchases}
-        renderItem={renderListItem}
-        keyExtractor={(item: Purchase) => item._id}
-        style={styles.purchases}
-      />
+      <View style={{flex: 0.5}}>
+        <Text style={styles.subtitle}>Purchase History</Text>
+        <FlatList
+          data={purchases}
+          renderItem={renderPurchaseListItem}
+          keyExtractor={(item: Purchase) => item._id}
+          style={styles.purchases}
+        />
+      </View>
+      <View style={{flex: 0.5}}>
+        <Text style={styles.subtitle}>Order History</Text>
+        {orders && orders.length ? (
+          <FlatList
+            data={orders}
+            renderItem={renderOrderListItem}
+            keyExtractor={(item: Order) => item._id}
+            style={styles.purchases}
+          />
+        ) : (
+          <Text style={styles.label}>No Data</Text>
+        )}
+      </View>
       <Button
         icon={{
           name: 'plus-square',

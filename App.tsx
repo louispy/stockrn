@@ -5,6 +5,7 @@
  * @format
  */
 import 'react-native-get-random-values';
+
 import {NavigationContainer} from '@react-navigation/native';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import React from 'react';
@@ -13,11 +14,13 @@ import Toast from 'react-native-toast-message';
 import {Colors} from 'react-native/Libraries/NewAppScreen';
 
 import HomeScreen from './screens/HomeScreen';
+import OrderFormScreen from './screens/OrderFormScreen';
 import ProductDetailScreen from './screens/ProductDetailScreen';
 import PurchaseFormScreen from './screens/PurchaseFormScreen';
 import {RootStackParamList} from './types/stack.type';
 
 import type {PropsWithChildren} from 'react';
+import {RealmProvider} from '@realm/react';
 type SectionProps = PropsWithChildren<{
   title: string;
 }>;
@@ -52,18 +55,21 @@ function Section({children, title}: SectionProps): React.JSX.Element {
 
 function App(): React.JSX.Element {
   return (
-    <NavigationContainer>
-      <Stack.Navigator>
-        <Stack.Screen
-          name="Home"
-          component={HomeScreen}
-          options={{title: 'StockRN'}}
-        />
-        <Stack.Screen name="Purchase Form" component={PurchaseFormScreen} />
-        <Stack.Screen name="Product Detail" component={ProductDetailScreen} />
-      </Stack.Navigator>
-      <Toast />
-    </NavigationContainer>
+    <RealmProvider>
+      <NavigationContainer>
+        <Stack.Navigator>
+          <Stack.Screen
+            name="Home"
+            component={HomeScreen}
+            options={{title: 'StockRN'}}
+          />
+          <Stack.Screen name="Purchase Form" component={PurchaseFormScreen} />
+          <Stack.Screen name="Product Detail" component={ProductDetailScreen} />
+          <Stack.Screen name="Order Form" component={OrderFormScreen} />
+        </Stack.Navigator>
+        <Toast />
+      </NavigationContainer>
+    </RealmProvider>
   );
 }
 

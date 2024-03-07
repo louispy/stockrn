@@ -18,24 +18,21 @@ import ProductSchema from '../schemas/product.schema';
 import {Product} from '../types/product.type';
 import {HomeStackProps} from '../types/stack.type';
 import {useIsFocused} from '@react-navigation/native';
+import {useStyles} from '../hooks/useStyles';
+import {useQuery, useRealm} from '@realm/react';
 
 const HomeScreen: React.FC<HomeStackProps> = ({
   navigation,
 }: HomeStackProps): React.JSX.Element => {
-  const isDarkMode = useColorScheme() === 'dark';
-  const primaryColor = isDarkMode ? Colors.lighter : Colors.darker;
-  const secondaryColor = isDarkMode ? Colors.darker : Colors.lighter;
+  const {
+    styles: commonStyles,
+    secondaryColor,
+    primaryColor,
+    isDarkMode,
+  } = useStyles();
   const styles = StyleSheet.create({
+    ...commonStyles,
     root: {backgroundColor: secondaryColor, flex: 1},
-    button: {
-      backgroundColor: secondaryColor,
-      borderColor: primaryColor,
-      borderWidth: 1,
-      borderRadius: 10,
-      padding: 15,
-    },
-    buttonTitle: {color: primaryColor},
-    buttonContainer: {paddingVertical: 30},
     row: {
       flexDirection: 'row',
       alignItems: 'flex-end',
@@ -65,18 +62,21 @@ const HomeScreen: React.FC<HomeStackProps> = ({
 
   const [query, setQuery] = useState<string>('');
   const [products, setProducts] = useState<Product[]>([]);
-  // const isFocused = useIsFocused();
+  const isFocused = useIsFocused();
 
-  // useEffect(() => handleSearch(query), [isFocused]);
+  useEffect(() => handleSearch(query), [isFocused]);
+
+  const realm = useRealm();
+  // const productQuery = useQuery('Product');
 
   const handleSearch = (q: string) => {
     if (q.length < 3) return;
     (async () => {
-      let realm = null;
+      // let realm = null;
       try {
-        realm = await Realm.open({
-          schema: [ProductSchema],
-        });
+        // const res = useQuery<Product>('Product', profiles =>
+        //   profiles.filtered('productCode BEGIINSWITH[c] $0', q),
+        // );
         const res = realm
           .objects<Product>('Product')
           .filtered('productCode BEGINSWITH[c] $0', q);
@@ -93,14 +93,12 @@ const HomeScreen: React.FC<HomeStackProps> = ({
           );
           setProducts(p);
         }
-        console.log('res', res);
       } catch (e) {
         console.error(e);
       } finally {
-        if (realm !== null && !realm.isClosed) {
-          console.log('realm close hhome');
-          realm.close();
-        }
+        // if (realm !== null && !realm.isClosed) {
+        //   realm.close();
+        // }
       }
     })();
   };
@@ -125,7 +123,6 @@ const HomeScreen: React.FC<HomeStackProps> = ({
   const renderListItem = ({item}: {item: Product}) => (
     <TouchableHighlight
       onPress={() => {
-        console.log('navigate', item.productCode, typeof item._id);
         navigation.navigate('Product Detail', {_id: item._id});
       }}>
       <View style={styles.row}>
@@ -162,7 +159,7 @@ const HomeScreen: React.FC<HomeStackProps> = ({
         />
         <Button
           icon={{
-            name: 'plus-square',
+            name: 'shopping-cart',
             type: 'font-awesome',
             size: 20,
             color: primaryColor,
@@ -175,6 +172,20 @@ const HomeScreen: React.FC<HomeStackProps> = ({
           onPress={() =>
             navigation.navigate('Purchase Form', {productCode: ''})
           }
+        />
+        <Button
+          icon={{
+            name: 'shopping-bag',
+            type: 'font-awesome',
+            size: 20,
+            color: secondaryColor,
+          }}
+          buttonStyle={styles.buttonInverted}
+          titleStyle={styles.buttonTitleInverted}
+          containerStyle={styles.buttonContainer}
+          type="solid"
+          title="Create Order"
+          onPress={() => navigation.navigate('Order Form')}
         />
       </SafeAreaView>
     </>
