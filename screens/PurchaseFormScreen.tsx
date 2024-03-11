@@ -142,9 +142,6 @@ const PurchaseFormScreen: React.FC<PurchaseFormStackProps> = (
       console.error(err);
       Toast.show({text1: 'ERROR: ' + err});
     } finally {
-      // if (realm !== null && !realm.isClosed) {
-      //   realm.close();
-      // }
       navigation.goBack();
     }
   };

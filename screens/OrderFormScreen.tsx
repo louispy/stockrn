@@ -114,12 +114,6 @@ const OrderFormScreen: React.FC<OrderFormStackProps> = (
         .reduce((sum, current) => sum + current.price * current.quantity, 0)
         .toLocaleString('id-ID'),
     };
-    // productCode,
-    // quantity: stock,
-    // 'Price (IDR)': _.parseInt(price).toLocaleString('id-ID'),
-    // notes,
-    // purchaser: admin,
-    // 'Sub Total (IDR)': (_.parseInt(price) * stock).toLocaleString('id-ID'),
   };
 
   const validateForm = () => {
@@ -127,7 +121,6 @@ const OrderFormScreen: React.FC<OrderFormStackProps> = (
 
     if (!res.success) {
       const {error} = res;
-      console.log('error', error);
       error.issues.forEach(issue => {
         if (!issue.path || issue.path.length < 2) return;
         setItem(
@@ -160,30 +153,8 @@ const OrderFormScreen: React.FC<OrderFormStackProps> = (
 
     try {
       realm.write(() => {
-        console.log('1111');
         if (!realm) return;
-        console.log('222');
         const now = new Date();
-        console.log(
-          '333',
-          JSON.stringify(
-            {
-              _id: new Realm.BSON.ObjectId(),
-              items: orderItems.map(item => ({
-                productCode: item.productCode,
-                quantity: item.quantity,
-                price: parseInt(item.price.toString()),
-              })),
-              admin,
-              buyer,
-              notes,
-              createdAt: now,
-              updatedAt: now,
-            },
-            null,
-            2,
-          ),
-        );
         realm.create('Order', {
           _id: new Realm.BSON.ObjectId(),
           items: orderItems.map(item => ({
@@ -197,9 +168,7 @@ const OrderFormScreen: React.FC<OrderFormStackProps> = (
           createdAt: now,
           updatedAt: now,
         });
-        console.log('4444');
         orderItems.forEach(item => {
-          console.log('555', JSON.stringify(item, null, 2));
           const products = realm
             .objects('Product')
             .filtered(
@@ -212,16 +181,12 @@ const OrderFormScreen: React.FC<OrderFormStackProps> = (
             product.updatedAt = now;
           }
         });
-        console.log('666');
       });
       Toast.show({text1: 'Succesfully created order'});
     } catch (err) {
       console.error(err);
       Toast.show({text1: 'ERROR: ' + err});
     } finally {
-      // if (realm !== null && !realm.isClosed) {
-      //   realm.close();
-      // }
       navigation.goBack();
     }
   };
