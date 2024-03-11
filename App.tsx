@@ -8,11 +8,15 @@ import 'react-native-get-random-values';
 
 import {NavigationContainer} from '@react-navigation/native';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
+import {RealmProvider} from '@realm/react';
 import React from 'react';
 import {StyleSheet, Text, useColorScheme, View} from 'react-native';
 import Toast from 'react-native-toast-message';
 import {Colors} from 'react-native/Libraries/NewAppScreen';
 
+import OrderSchema, {OrderItemSchema} from './schemas/order.schema';
+import ProductSchema from './schemas/product.schema';
+import PurchaseSchema, {PurchaseItemSchema} from './schemas/purchase.schema';
 import HomeScreen from './screens/HomeScreen';
 import OrderFormScreen from './screens/OrderFormScreen';
 import ProductDetailScreen from './screens/ProductDetailScreen';
@@ -20,7 +24,6 @@ import PurchaseFormScreen from './screens/PurchaseFormScreen';
 import {RootStackParamList} from './types/stack.type';
 
 import type {PropsWithChildren} from 'react';
-import {RealmProvider} from '@realm/react';
 type SectionProps = PropsWithChildren<{
   title: string;
 }>;
@@ -55,7 +58,14 @@ function Section({children, title}: SectionProps): React.JSX.Element {
 
 function App(): React.JSX.Element {
   return (
-    <RealmProvider>
+    <RealmProvider
+      schema={[
+        ProductSchema,
+        PurchaseItemSchema,
+        PurchaseSchema,
+        OrderItemSchema,
+        OrderSchema,
+      ]}>
       <NavigationContainer>
         <Stack.Navigator>
           <Stack.Screen

@@ -80,7 +80,7 @@ android {
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
-        versionName "1.0"
+        versionName "1.1"
     }
     signingConfigs {
         debug {
@@ -90,10 +90,10 @@ android {
             keyPassword 'android'
         }
         release {
-            storeFile file('your_key_name.keystore')
+            storeFile file('my-release-key.keystore')
             storePassword 'password'
-            keyAlias 'your_key_alias'
-            keyPassword 'your_key_file_alias_password'
+            keyAlias 'my-key-alias'
+            keyPassword 'password'
         }
     }
     buildTypes {

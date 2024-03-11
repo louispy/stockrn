@@ -1,3 +1,5 @@
+import {useIsFocused} from '@react-navigation/native';
+import {useRealm} from '@realm/react';
 import {Button, SearchBar} from '@rneui/themed';
 import _ from 'lodash';
 import {useCallback, useEffect, useMemo, useState} from 'react';
@@ -6,20 +8,14 @@ import {
   StyleSheet,
   Text,
   TouchableHighlight,
-  useColorScheme,
   View,
 } from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/Ionicons';
-import {Colors} from 'react-native/Libraries/NewAppScreen';
-import Realm from 'realm';
 
-import ProductSchema from '../schemas/product.schema';
+import {useStyles} from '../hooks/useStyles';
 import {Product} from '../types/product.type';
 import {HomeStackProps} from '../types/stack.type';
-import {useIsFocused} from '@react-navigation/native';
-import {useStyles} from '../hooks/useStyles';
-import {useQuery, useRealm} from '@realm/react';
 
 const HomeScreen: React.FC<HomeStackProps> = ({
   navigation,
@@ -95,10 +91,6 @@ const HomeScreen: React.FC<HomeStackProps> = ({
         }
       } catch (e) {
         console.error(e);
-      } finally {
-        // if (realm !== null && !realm.isClosed) {
-        //   realm.close();
-        // }
       }
     })();
   };

@@ -15,7 +15,7 @@ import ProductSchema from '../schemas/product.schema';
 import PurchaseSchema, {PurchaseItemSchema} from '../schemas/purchase.schema';
 import {Product} from '../types/product.type';
 import {PurchaseFormStackProps} from '../types/stack.type';
-import { useRealm } from '@realm/react';
+import {useRealm} from '@realm/react';
 
 const PurchaseFormScreen: React.FC<PurchaseFormStackProps> = (
   props: PurchaseFormStackProps,
@@ -45,7 +45,7 @@ const PurchaseFormScreen: React.FC<PurchaseFormStackProps> = (
   }, []);
 
   const purchaseSchema = z.object({
-    productCode: z.string().min(1, 'Product code may not be empty'),
+    productCode: z.string().min(3, 'Product code may not be empty'),
     quantity: z.coerce.number().min(1, 'Minimum purchase qty is 1'),
     price: z.coerce.number().min(1, 'Minimum price is IDR 1'),
   });
@@ -67,8 +67,6 @@ const PurchaseFormScreen: React.FC<PurchaseFormStackProps> = (
     };
   };
 
-  
-
   const getFormattedFormData = () => {
     return {
       productCode,
@@ -76,7 +74,9 @@ const PurchaseFormScreen: React.FC<PurchaseFormStackProps> = (
       'Price (IDR)': _.parseInt(price).toLocaleString('id-ID'),
       notes,
       purchaser,
-      'Sub Total (IDR)': (_.parseInt(price) * _.parseInt(quantity)).toLocaleString('id-ID'),
+      'Subtotal (IDR)': (
+        _.parseInt(price) * _.parseInt(quantity)
+      ).toLocaleString('id-ID'),
     };
   };
 
@@ -104,9 +104,7 @@ const PurchaseFormScreen: React.FC<PurchaseFormStackProps> = (
     const success = validateForm();
     if (!success) return;
 
-
     try {
-
       realm.write(() => {
         if (!realm) return;
         const now = new Date();
@@ -196,7 +194,9 @@ const PurchaseFormScreen: React.FC<PurchaseFormStackProps> = (
           />
           {priceWarning && <Text style={styles.warning}>{priceWarning}</Text>}
           <Text style={styles.label}>
-            Sub Total: {parseInt(quantity) * parseInt(price)}
+            {`Subtotal: Rp ${(
+              parseInt(quantity) * parseInt(price)
+            ).toLocaleString('id-ID')}`}
           </Text>
           <Text style={styles.label}>Notes</Text>
           <TextInput
